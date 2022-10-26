@@ -5,6 +5,7 @@ import { mutate } from 'swr';
 import { ArrowLeftIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 import ConfirmationModal from '@components/ConfirmationModal';
+import { keyDigest } from 'npm/src/db/utils';
 
 /**
  * Edit view will have extra fields (showOnlyInEditView: true)
@@ -78,6 +79,26 @@ const fieldCatalog = [
     },
   },
   {
+    key: 'publicKey',
+    label: 'Public Key',
+    type: 'certTextArea',
+    attributes: {
+      rows: 5,
+      editable: true,
+      showOnlyInEditView: true,
+    },
+  },
+  {
+    key: 'privateKey',
+    label: 'Private Key',
+    type: 'certTextArea',
+    attributes: {
+      rows: 5,
+      editable: true,
+      showOnlyInEditView: true,
+    },
+  },
+  {
     key: 'clientID',
     label: 'Client ID',
     type: 'text',
@@ -98,9 +119,10 @@ function getFieldList(isEditView) {
 }
 
 function getInitialState(samlConfig, isEditView) {
-  const _state = {};
+  const _state: any = {};
   const _fieldCatalog = getFieldList(isEditView);
 
+  _state.certs = samlConfig ? samlConfig.certs : { publicKey: 'not defined', privateKey: 'not defined'};
   _fieldCatalog.forEach(({ key, attributes }) => {
     _state[key] = samlConfig?.[key]
       ? attributes.isArray
@@ -182,6 +204,9 @@ const AddEdit = ({ samlConfig }: AddEditProps) => {
     setFormObj((cur) => ({ ...cur, [target.id]: target.value }));
   }
 
+  const [showPassword, setShowPassword] = useState(false);
+  const toggleShowPassword = () => setShowPassword(!showPassword);
+
   return (
     <>
       <Link href='/admin/saml/config'>
@@ -247,10 +272,25 @@ const AddEdit = ({ samlConfig }: AddEditProps) => {
                           }`}
                           rows={rows}
                         />
+                      ) : type === 'certTextArea' ? (
+                        <textarea
+                          id={key}
+                          placeholder={placeholder}
+                          value={formObj.certs[key]}
+                          required={_required}
+                          readOnly={true}
+                          maxLength={maxLength}
+                          className={`textarea textarea-bordered h-24 w-full ${
+                            isArray ? 'whitespace-pre' : ''
+                          }`}
+                          rows={rows}
+                        />
                       ) : (
+                        <div>
+                          <div className='flex-1'>
                         <input
                           id={key}
-                          type={type}
+                          type={showPassword ? 'text' : type}
                           placeholder={placeholder}
                           value={value}
                           required={_required}
@@ -259,6 +299,9 @@ const AddEdit = ({ samlConfig }: AddEditProps) => {
                           onChange={handleChange}
                           className='input input-bordered w-full'
                         />
+                        </div>
+                        { type === 'password' ? (<button type="button" className="btn mt-3 ml-auto" onClick={toggleShowPassword} > { showPassword ? 'Hide' : 'Show' } Client Secret</button>) : (<div/>) }
+                        </div>
                       )}
                     </div>
                   );
