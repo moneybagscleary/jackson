@@ -11,13 +11,13 @@ export class JacksonIndex {
   @Index('_jackson_index_key')
   @Column({
     type: 'varchar',
-    length: 1500,
+    length: 255,
   })
   key!: string;
 
   @Column({
     type: 'varchar',
-    length: 1500,
+    length: 255,
   })
   storeKey!: string;
 
